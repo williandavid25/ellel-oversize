@@ -151,3 +151,149 @@ button, input, select, textarea {
 
 /* Animations */
 .shadow-hover { transition: box-shadow 0.3s ease, transform 0.3s ease; }
+
+/* ═══════════════════════════════════════════════════════
+   HERO VIDEO BACKGROUND
+═══════════════════════════════════════════════════════ */
+.video-hero {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    min-height: 500px;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;  /* Content sits near bottom — cinematic */
+}
+
+/* The video itself — always covers full section */
+.video-hero__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 60%;   /* frame the outfit, not the dark top */
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Gradient overlay: dark at bottom for text, transparent at top */
+.video-hero__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.15) 0%,
+        rgba(0,0,0,0.25) 40%,
+        rgba(0,0,0,0.75) 80%,
+        rgba(0,0,0,0.88) 100%
+    );
+}
+
+/* Text content floats above video */
+.video-hero__content {
+    position: relative;
+    z-index: 2;
+    padding-bottom: clamp(3rem, 8vh, 5rem);
+    width: 100%;
+}
+
+/* Title — large, white, bold */
+.video-hero__title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    font-size: clamp(3rem, 8vw, 7rem);
+    line-height: 1;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.2rem;
+    text-shadow: 0 4px 30px rgba(0,0,0,0.4);
+}
+
+/* Gold accent for the second typewriter word (stands out on dark video) */
+.text-gold {
+    color: #FEBD01;
+}
+
+/* Typewriter cursor — gold on video bg */
+.typewriter-cursor {
+    color: #FEBD01 !important;
+}
+
+/* Subtitle */
+.video-hero__subtitle {
+    font-size: clamp(0.9rem, 2vw, 1.15rem);
+    color: rgba(255,255,255,0.82);
+    line-height: 1.6;
+    max-width: 540px;
+    margin-bottom: 2rem;
+    font-weight: 400;
+}
+
+/* CTA */
+.video-hero__cta { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+/* White button variant for video hero */
+.btn-white {
+    background: #fff;
+    color: #000;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    border: none;
+    padding: 0.9rem 2.2rem;
+    border-radius: var(--radius-pill, 50px);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.btn-white:hover {
+    background: #f0f0f0;
+    transform: scale(1.04);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+/* Animated scroll-down arrow */
+.video-hero__scroll-hint {
+    position: absolute;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.video-hero__scroll-hint span {
+    display: block;
+    width: 22px;
+    height: 22px;
+    border-right: 2.5px solid rgba(255,255,255,0.7);
+    border-bottom: 2.5px solid rgba(255,255,255,0.7);
+    transform: rotate(45deg);
+    animation: scrollBounce 1.4s ease-in-out infinite;
+}
+@keyframes scrollBounce {
+    0%, 100% { transform: rotate(45deg) translateY(0);   opacity: 1; }
+    50%       { transform: rotate(45deg) translateY(8px); opacity: 0.4; }
+}
+
+/* ── Responsive Mobile ── */
+@media (max-width: 768px) {
+    .video-hero__content {
+        padding-bottom: clamp(4rem, 12vh, 6rem);
+        text-align: left;
+    }
+    .video-hero__title {
+        font-size: clamp(2.6rem, 13vw, 4rem);
+    }
+    .video-hero__subtitle {
+        font-size: 0.9rem;
+    }
+    .video-hero__bg {
+        object-position: center center;
+    }
+}

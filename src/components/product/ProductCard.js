@@ -3,7 +3,7 @@ export const ProductCard = (product) => {
     const imageSrc = product.imagenes && product.imagenes[0] ? product.imagenes[0] : 'https://via.placeholder.com/300x400/eeeeee/333333?text=Modelo';
     
     return `
-        <article class="product-card" id="${product.id}">
+        <article class="product-card" id="${product.id}" data-genero="${product.genero || ''}" data-categoria="${product.categoria || ''}">
             <div class="product-image-wrapper">
                 ${isNewBadge}
                 <a href="producto.html?id=${product.id}" style="display: block; width: 100%; height: 100%;">

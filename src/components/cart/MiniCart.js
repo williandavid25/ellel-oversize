@@ -6,13 +6,44 @@ export const MiniCart = () => {
                     <button class="close-btn-minimal" id="close-cart-btn" aria-label="Cerrar carrito">
                         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
+                    <span style="font-family:'Montserrat',sans-serif; font-weight:900; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.06em;">Mi Carrito</span>
                 </div>
                 
                 <div class="cart-body-scrollable">
-                    <!-- CONTENEDOR CARRITO VACÍO -->
+
+                    <!-- ═══ USER / LOGIN BANNER ═══ -->
+
+                    <!-- Si NO está logueado → mostrar banner de login -->
+                    <button class="cart-login-banner" id="cart-login-banner" aria-label="Iniciar sesión" style="display:flex; border:none; width:100%; text-align:left; cursor:pointer;">
+                        <div class="cart-login-icon">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                        </div>
+                        <div class="cart-login-text">
+                            <strong>Iniciar sesión</strong>
+                            <span>Paga más rápido, guarda tus pedidos</span>
+                        </div>
+                        <div class="cart-login-arrow">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </div>
+                    </button>
+
+                    <!-- Si SÍ está logueado → mostrar info del usuario -->
+                    <div class="cart-user-banner" id="cart-user-banner" style="display:none;">
+                        <img class="cart-user-avatar" src="" alt="Avatar">
+                        <div>
+                            <span class="cart-user-name">Usuario</span>
+                            <span class="cart-user-email">correo@gmail.com</span>
+                        </div>
+                        <button class="cart-signout-btn" id="cart-signout-btn">Salir</button>
+                    </div>
+
+                    <!-- ═══ CONTENEDOR CARRITO VACÍO ═══ -->
                     <div class="cart-empty-state" id="cart-empty-state">
                         <h2 class="empty-title">TU CARRITO ESTA VACÍO</h2>
-                        <p class="empty-subtitle">¿Tienes una cuenta? Inicia sesión para pagar más rápido.</p>
+                        <p class="empty-subtitle">Explora nuestra colección y encuentra tu próximo look.</p>
                         
                         <button class="btn-keep-shopping" id="btn-keep-shopping">SEGUIR COMPRANDO</button>
                         
@@ -22,7 +53,7 @@ export const MiniCart = () => {
                         </button>
                     </div>
 
-                    <!-- CONTENEDOR ITEMS CARRITO -->
+                    <!-- ═══ CONTENEDOR ITEMS CARRITO ═══ -->
                     <div class="cart-filled-state" id="cart-filled-state" style="display: none;">
                         <div id="cart-items-wrapper"></div>
                         

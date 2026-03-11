@@ -19,7 +19,7 @@
 
 /* Reducción dramática del logo al hacer scroll */
 .header.scrolled .logo-link img {
-    height: 45px;
+    height: 76px; /* Bigger on all pages — applies to nosotros, contacto, etc. */
 }
 
 .header.scrolled .logo-text {
@@ -45,9 +45,15 @@
 }
 
 .logo-link img {
-    height: 65px; /* Reducido de 180px para que no tape la pantalla */
+    height: 110px; /* Prominent icon matching Ellel text */
     object-fit: contain;
     transition: transform 0.3s;
+}
+
+/* Mobile: slightly smaller but still clearly visible */
+@media (max-width: 768px) {
+    .logo-link img { height: 80px; }
+    .header.scrolled .logo-link img { height: 70px; }
 }
 
 .logo-link:hover img {
@@ -71,10 +77,36 @@
 
 .logo-underline {
     width: 100%;
-    height: 4px; /* Reducido de 8px */
+    height: 4px;
     background-color: var(--color-accent-yellow);
     margin-top: 2px;
 }
+
+/* ── Transparent header (over video hero) — white everything ── */
+/* ── Transparent header (over video hero) — white everything ── */
+body.home-page .header:not(.scrolled) .nav-item {
+    color: #fff;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+}
+body.home-page .header:not(.scrolled) .nav-item::after {
+    background: #FEBD01;
+}
+body.home-page .header:not(.scrolled) .logo-text {
+    color: #fff;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.4);
+}
+body.home-page .header:not(.scrolled) .icon-btn {
+    color: #fff;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
+}
+body.home-page .header:not(.scrolled) .cart-badge {
+    background: #FEBD01;
+    color: #000;
+}
+body.home-page .header:not(.scrolled) .logo-underline {
+    background-color: #FEBD01;
+}
+
 
 /* Nav Desktop */
 .desktop-nav {
@@ -177,7 +209,7 @@
     gap: var(--space-xs);
 }
 
-.icon-btn {
+.icon-btn, .header-avatar-btn {
     width: 44px; height: 44px;
     border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
@@ -186,6 +218,15 @@
     transition: all 0.3s ease;
     cursor: pointer;
     position: relative;
+    border: none;
+    padding: 0;
+    overflow: hidden;
+}
+
+.header-avatar-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .icon-svg {
@@ -202,6 +243,10 @@
 .bag-icon { 
     -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>'); 
     mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>'); 
+}
+.user-icon {
+    -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>');
+    mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>');
 }
 .menu-icon { 
     -webkit-mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>'); 

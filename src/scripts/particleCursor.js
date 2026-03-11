@@ -1,159 +1,172 @@
 /**
- * Antigravity Field Professional Particle System
- * Replicates the dense, whole-screen reactive scatter field effect.
- * Features: High density, tiny sizes, constant slow movement, and magnetic evasion/attraction.
+ * Antigravity Field — Particle System v2
+ * ----------------------------------------
+ * Works on BOTH desktop (mousemove) and mobile (touchmove / touchstart).
+ * Mobile uses a reduced particle count to stay smooth on low-end phones.
  */
 
 const canvas = document.getElementById('particle-canvas');
+if (!canvas) throw new Error('particle-canvas not found');
 
-if (canvas) {
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
+const ctx = canvas.getContext('2d');
+
+// ─── Resize canvas to full window ───
+function resizeCanvas() {
+    canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
+}
+resizeCanvas();
 
-    let particlesArray = [];
-    let mouse = {
-        x: undefined,
-        y: undefined,
-        radius: 400 // ENORME radio magnético para que te sigan desde lejos
-    };
+// ─── Touch / mouse pointer ───
+const pointer = {
+    x: undefined,
+    y: undefined,
+    radius: window.innerWidth < 768 ? 180 : 400, // smaller radius on mobile
+    active: false, // true while finger/mouse is pressing
+};
 
-    let isDesktop = window.innerWidth > 768;
+// MOUSE events (desktop)
+window.addEventListener('mousemove', (e) => {
+    pointer.x = e.clientX;
+    pointer.y = e.clientY;
+    pointer.active = true;
+});
 
-    if (isDesktop) {
-        window.addEventListener('mousemove', function(event) {
-            mouse.x = event.x;
-            mouse.y = event.y;
-        });
+window.addEventListener('mouseleave', () => {
+    pointer.x = undefined;
+    pointer.y = undefined;
+    pointer.active = false;
+});
 
-        class Particle {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.baseX = this.x;
-                this.baseY = this.y;
-                
-                this.size = Math.random() * 2 + 0.1; 
-                
-                const colors = ['#6F3ECD', '#FEBD01', '#888888', '#bbbbbb'];
-                this.color = colors[Math.floor(Math.random() * colors.length)];
-                
-                this.opacity = Math.random() * 0.7 + 0.3;
-                
-                // Variación de velocidad MUCHO MÁS LENTA para movimiento elegante
-                this.density = (Math.random() * 8) + 1; // Reducido drásticamente de 40 a 8
-            }
+// TOUCH events (mobile) — preventDefault kept passive:false for scroll safety
+window.addEventListener('touchstart', (e) => {
+    const t = e.touches[0];
+    pointer.x = t.clientX;
+    pointer.y = t.clientY;
+    pointer.active = true;
+}, { passive: true });
 
-            draw() {
-                ctx.save();
-                ctx.globalAlpha = this.opacity;
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
+window.addEventListener('touchmove', (e) => {
+    const t = e.touches[0];
+    pointer.x = t.clientX;
+    pointer.y = t.clientY;
+    pointer.active = true;
+}, { passive: true });
 
-            update() {
-                // If mouse is present, calculate interaction
-                if (mouse.x !== undefined && mouse.y !== undefined) {
-                    let dx = mouse.x - this.x;
-                    let dy = mouse.y - this.y;
-                    let distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (distance < mouse.radius) {
-                        // FUERZA DE ATRACCIÓN MASIVA
-                        let forceDirectionX = dx / distance;
-                        let forceDirectionY = dy / distance;
-                        
-                        // Cuanto más cerca, más rápido vuelan hacia ti (ahora atenuado)
-                        let force = (mouse.radius - distance) / mouse.radius;
-                        
-                        // Limitador estricto de velocidad máxima (suavidad)
-                        let maxSpeed = 1.5; 
-                        let directionX = forceDirectionX * force * this.density;
-                        let directionY = forceDirectionY * force * this.density;
-                        
-                        // Clamp speed
-                        if (directionX > maxSpeed) directionX = maxSpeed;
-                        if (directionX < -maxSpeed) directionX = -maxSpeed;
-                        if (directionY > maxSpeed) directionY = maxSpeed;
-                        if (directionY < -maxSpeed) directionY = -maxSpeed;
-                        
-                        // SUMAMOS para que VAYAN hacia el mouse (ATRACCIÓN) pero de forma elegante
-                        this.x += directionX;
-                        this.y += directionY;
-                    } else {
-                        // Settle back to grid/base slowly slowly
-                        if (this.x !== this.baseX) {
-                            let dxBase = this.x - this.baseX;
-                            this.x -= dxBase / 40;
-                        }
-                        if (this.y !== this.baseY) {
-                            let dyBase = this.y - this.baseY;
-                            this.y -= dyBase / 40;
-                        }
-                    }
-                } else {
-                    // Settle back to grid if mouse is gone
-                    if (this.x !== this.baseX) {
-                        let dxBase = this.x - this.baseX;
-                        this.x -= dxBase / 20;
-                    }
-                    if (this.y !== this.baseY) {
-                        let dyBase = this.y - this.baseY;
-                        this.y -= dyBase / 20;
-                    }
-                }
-                
-                // Give them a constant, very slow drift even when resting
-                this.baseX += (Math.random() - 0.5) * 0.5;
-                this.baseY += (Math.random() - 0.5) * 0.5;
-                
-                // Keep them roughly in bounds of their original area
-                if(this.baseX < 0 || this.baseX > canvas.width) this.baseX = this.x;
-                if(this.baseY < 0 || this.baseY > canvas.height) this.baseY = this.y;
+window.addEventListener('touchend', () => {
+    // Keep the last position so particles settle back gradually
+    setTimeout(() => {
+        pointer.x = undefined;
+        pointer.y = undefined;
+        pointer.active = false;
+    }, 600);
+});
 
-                this.draw();
-            }
-        }
+// ─── Particle Class ───
+const COLORS = ['#6F3ECD', '#FEBD01', '#aaaaaa', '#cccccc', '#9B72E7'];
 
-        function init() {
-            particlesArray = [];
-            // MASSIVE amount of particles for the Antigravity dense field look
-            // Carefully balanced formula so it doesn't crash browsers
-            let numberOfParticles = (canvas.height * canvas.width) / 2500; 
+class Particle {
+    constructor() {
+        this.reset();
+    }
 
-            for (let i = 0; i < numberOfParticles; i++) {
-                let x = Math.random() * canvas.width;
-                let y = Math.random() * canvas.width; // Intentional spread
-                particlesArray.push(new Particle(x, y));
-            }
-        }
+    reset() {
+        this.x      = Math.random() * canvas.width;
+        this.y      = Math.random() * canvas.height;
+        this.baseX  = this.x;
+        this.baseY  = this.y;
+        this.size   = Math.random() * 2.2 + 0.3;
+        this.color  = COLORS[Math.floor(Math.random() * COLORS.length)];
+        this.opacity = Math.random() * 0.6 + 0.3;
+        this.density = (Math.random() * 6) + 1;
+    }
 
-        function animate() {
-            requestAnimationFrame(animate);
-            // Deep clear for crisp particles
-            ctx.clearRect(0, 0, canvas.width, canvas.height); 
+    draw() {
+        ctx.save();
+        ctx.globalAlpha = this.opacity;
+        ctx.fillStyle   = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
 
-            for (let i = 0; i < particlesArray.length; i++) {
-                particlesArray[i].update();
-            }
-        }
+    update() {
+        if (pointer.x !== undefined && pointer.y !== undefined) {
+            const dx       = pointer.x - this.x;
+            const dy       = pointer.y - this.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
 
-        init();
-        animate();
+            if (distance < pointer.radius) {
+                const fx = (dx / distance);
+                const fy = (dy / distance);
+                const force = (pointer.radius - distance) / pointer.radius;
+                const maxSpeed = 1.8;
 
-        window.addEventListener('resize', function() {
-            isDesktop = window.innerWidth > 768;
-            if (isDesktop) {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-                init();
+                let vx = fx * force * this.density;
+                let vy = fy * force * this.density;
+
+                vx = Math.max(-maxSpeed, Math.min(maxSpeed, vx));
+                vy = Math.max(-maxSpeed, Math.min(maxSpeed, vy));
+
+                this.x += vx;
+                this.y += vy;
             } else {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particlesArray = [];
+                this.x -= (this.x - this.baseX) / 35;
+                this.y -= (this.y - this.baseY) / 35;
             }
-        });
+        } else {
+            // Drift back to base when no pointer
+            this.x -= (this.x - this.baseX) / 20;
+            this.y -= (this.y - this.baseY) / 20;
+        }
+
+        // Gentle ambient drift
+        this.baseX += (Math.random() - 0.5) * 0.4;
+        this.baseY += (Math.random() - 0.5) * 0.4;
+
+        // Keep in bounds
+        if (this.baseX < 0 || this.baseX > canvas.width)  this.baseX = Math.random() * canvas.width;
+        if (this.baseY < 0 || this.baseY > canvas.height) this.baseY = Math.random() * canvas.height;
+
+        this.draw();
     }
 }
+
+// ─── Particle count — smaller on mobile for smooth 60fps ───
+function particleCount() {
+    const area = canvas.width * canvas.height;
+    return window.innerWidth < 768
+        ? Math.floor(area / 6000)   // ~120 particles on a 360×800 phone
+        : Math.floor(area / 2500);  // ~300 on a 1440×900 desktop
+}
+
+// ─── Init / Animate ───
+let particles = [];
+
+function init() {
+    particles = [];
+    const count = particleCount();
+    for (let i = 0; i < count; i++) particles.push(new Particle());
+}
+
+let animFrameId;
+function animate() {
+    animFrameId = requestAnimationFrame(animate);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < particles.length; i++) particles[i].update();
+}
+
+init();
+animate();
+
+// ─── Handle resize ───
+let resizeTimer;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+        resizeCanvas();
+        pointer.radius = window.innerWidth < 768 ? 180 : 400;
+        init();
+    }, 200);
+});

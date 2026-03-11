@@ -3,7 +3,9 @@ import { ProductGrid } from '../components/product/ProductGrid.js';
 import { MiniCart } from '../components/cart/MiniCart.js';
 import { CheckoutModal } from '../components/forms/CheckoutForm.js';
 import { initCart, addToCart, openCart } from './cartState.js';
-// ParticleCursor se ejecuta de forma global ahora desde su propio script
+import { AuthModal } from '../components/auth/AuthModal.js';
+import { initGoogleAuth, openAuthModal, closeAuthModal, signOut, updateCartAuthUI, updateHeaderAuthUI, getUser } from './auth.js';
+import { initSearch } from './search.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Aplicación iniciada');
@@ -18,9 +20,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const checkoutContainer = document.getElementById('checkout-container');
     if (checkoutContainer) checkoutContainer.innerHTML = CheckoutModal();
 
+    // Inject Auth Modal
+    const authContainer = document.getElementById('auth-container');
+    if (authContainer) authContainer.innerHTML = AuthModal();
+
     // 2. Inicializar Estado del Carrito y Lógica DOM
     initCart();
     setupUIInteractions();
+    setupAuthInteractions();
+    initSearch(); // Live product search
     
     // 3. Iniciar el Carrusel
     setupCarousel();
@@ -60,6 +68,92 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Aquí inicializaremos Three.js para el canvas 3D más adelante
 });
+
+function setupAuthInteractions() {
+    // --- Login banner in cart → opens auth modal ---
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('#cart-login-banner')) {
+            openAuthModal();
+        }
+        if (e.target.closest('#cart-signout-btn')) {
+            signOut();
+        }
+        if (e.target.closest('#cart-login-btn') || e.target.closest('#header-login-btn')) {
+            openAuthModal();
+        }
+        if (e.target.closest('#auth-close-btn') || e.target.id === 'auth-modal-overlay') {
+            closeAuthModal();
+        }
+        // Header user avatar → also triggers sign-out dropdown (future)
+        if (e.target.closest('#header-user-avatar')) {
+            if (confirm('¿Cerrar sesión?')) signOut();
+        }
+    });
+
+    // --- Email form (mock / fallback sign-in) ---
+    document.addEventListener('submit', (e) => {
+        if (!e.target.matches('#auth-email-form')) return;
+        e.preventDefault();
+
+        const email    = document.getElementById('auth-email')?.value?.trim();
+        const password = document.getElementById('auth-password')?.value;
+        const errorMsg = document.getElementById('auth-error-msg');
+        const submitBtn = document.getElementById('btn-auth-submit');
+        const spinner   = document.getElementById('auth-spinner');
+        const submitText = document.getElementById('auth-submit-text');
+
+        if (!email || !password) {
+            if (errorMsg) errorMsg.textContent = 'Por favor completa todos los campos.';
+            return;
+        }
+
+        // Simulate loading
+        if (submitBtn) submitBtn.disabled = true;
+        if (spinner) spinner.style.display = 'inline-block';
+        if (submitText) submitText.textContent = '';
+        if (errorMsg) errorMsg.textContent = '';
+
+        setTimeout(() => {
+            // Mock: create a local user from the email (email/password is UI only — no backend)
+            const name = email.split('@')[0];
+            const mockUser = {
+                name:    name.charAt(0).toUpperCase() + name.slice(1),
+                email:   email,
+                picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6F3ECD&color=fff&bold=true`,
+                sub:     'local_' + email,
+            };
+            localStorage.setItem('ellel_user', JSON.stringify(mockUser));
+            updateCartAuthUI(mockUser);
+            updateHeaderAuthUI(mockUser);
+            closeAuthModal();
+            if (submitBtn) submitBtn.disabled = false;
+            if (spinner) spinner.style.display = 'none';
+            if (submitText) submitText.textContent = 'INICIAR SESIÓN';
+        }, 1200);
+    });
+
+    // Toggle register / login
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#auth-toggle-mode')) return;
+        const btn = document.getElementById('auth-toggle-mode');
+        const title = document.querySelector('.auth-title');
+        const submitText = document.getElementById('auth-submit-text');
+        const isLogin = btn?.textContent === 'Regístrate gratis';
+        if (btn) btn.textContent = isLogin ? 'Inicia sesión' : 'Regístrate gratis';
+        if (title) title.textContent = isLogin ? 'Crea tu cuenta' : 'Bienvenido de vuelta';
+        if (submitText) submitText.textContent = isLogin ? 'CREAR CUENTA' : 'INICIAR SESIÓN';
+    });
+
+    // Wait for Google Identity Services to be ready, then init
+    if (window.google?.accounts?.id) {
+        initGoogleAuth();
+    } else {
+        window.addEventListener('load', () => {
+            if (window.google?.accounts?.id) initGoogleAuth();
+            else setTimeout(() => { if (window.google?.accounts?.id) initGoogleAuth(); }, 1500);
+        });
+    }
+}
 
 function setupUIInteractions() {
     const checkoutBtn = document.getElementById('open-checkout-btn');
@@ -165,29 +259,34 @@ function setupUIInteractions() {
         });
     }
 
-    // Search button popup logic
-    const searchBtn = document.querySelector('.search-btn');
-    if (searchBtn) {
-        searchBtn.addEventListener('click', () => {
-             const query = prompt('¿Qué estás buscando?');
-             if(query) {
-                 alert('Has buscado: ' + query + '. (La función de búsqueda se activará con la base de datos final).');
-             }
-        });
-    }
-
-    // Simple Filter UI Toggle
+    // NOTE: Search is now handled by initSearch() from search.js
+    // Filter by gender — real filtering of product cards
     const filterBtns = document.querySelectorAll('.filter-btn');
     filterBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
-             filterBtns.forEach(b => b.classList.remove('active'));
-             e.target.classList.add('active');
-             
-             // Animates the grid to simulate "filtering" loading state
-             gsap.fromTo('.product-card', 
-                 { y: 20, autoAlpha: 0 }, 
-                 { y: 0, autoAlpha: 1, duration: 0.5, stagger: 0.05, ease: 'back.out' }
-             );
+            filterBtns.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+
+            const genero = e.target.dataset.genero || ''; // '' = todos
+            const cards  = document.querySelectorAll('.product-card');
+
+            cards.forEach(card => {
+                const cardGenero = card.dataset.genero || '';
+                const show = !genero || cardGenero === genero;
+
+                if (show) {
+                    card.style.display = '';
+                    gsap.fromTo(card,
+                        { y: 20, autoAlpha: 0 },
+                        { y: 0, autoAlpha: 1, duration: 0.4, ease: 'back.out' }
+                    );
+                } else {
+                    gsap.to(card, {
+                        autoAlpha: 0, y: -10, duration: 0.25, ease: 'power2.in',
+                        onComplete: () => { card.style.display = 'none'; }
+                    });
+                }
+            });
         });
     });
 
